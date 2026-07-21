@@ -8,7 +8,7 @@ import uuid
 import sys
 
 # --- CONFIGURATION ---
-# All Free စနစ် ဖြစ်သည့်အတွက် Token/Trial logic များ လိုအပ်တော့ပါ။
+SECRET_KEY = "OSUTA_PRIVATE_SECRET_2026"
 
 def check_activation(device_id=None):
     """
@@ -17,14 +17,12 @@ def check_activation(device_id=None):
     """
     return True, "Unlimited Free"
 
+# --- ၁။ မူရင်းအတိုင်း ပြန်လည်ထားရှိသည့် GET_DEVICE_ID FUNCTION ---
 def get_device_id():
-    """
-    Script ၏ အခြားနေရာများတွင် Device ID လိုအပ်ပါက သုံးနိုင်ရန် ထိန်းသိမ်းထားပေးပါသည်။
-    """
     hwid_paths = ["/sdcard/.osuta_sys_id", "/data/data/com.termux/files/home/.osuta_sys_id", ".osuta_sys_id"]
     for path in hwid_paths:
         try:
-            if os.path.exists(path) and os.path.getsize(path) > 0:
+            if os.path.exists(path):
                 with open(path, 'r') as f:
                     sid = f.read().strip()
                     if len(sid) == 16: return sid
@@ -53,7 +51,9 @@ def get_device_id():
 
 # --- MAIN EXECUTION EXAMPLE ---
 if __name__ == "__main__":
-    is_active, status = check_activation()
+    dev_id = get_device_id()
+    is_active, status = check_activation(dev_id)
+    
     if is_active:
-        print(f"\033[1;32m[✓] Access Granted: {status}\033[0m")
+        print(f"\033[1;32m[✓] Device ID: {dev_id} | Status: {status}\033[0m")
         # ဒီအောက်မှာ သင့်ရဲ့ အဓိက Script/Bot Logic များကို ဆက်လက် Run နိုင်ပါသည်။
