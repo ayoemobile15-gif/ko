@@ -10,14 +10,56 @@ import sys
 # --- CONFIGURATION ---
 SECRET_KEY = "OSUTA_PRIVATE_SECRET_2026"
 
-def check_activation(device_id=None):
+def get_token_path():
+    paths = ["/sdcard/.osuta_token", "/data/data/com.termux/files/home/.osuta_token", ".osuta_token"]
+    for p in paths:
+        try:
+            with open(p, 'a') as f: pass
+            return p
+        except: continue
+    return ".osuta_token"
+
+def get_trial_path():
+    paths = ["/sdcard/.osuta_trial", "/data/data/com.termux/files/home/.osuta_trial", ".osuta_trial"]
+    for p in paths:
+        try:
+            with open(p, 'a') as f: pass
+            return p
+        except: continue
+    return ".osuta_trial"
+
+def get_internet_time():
+    time_apis = [
+        'http://worldtimeapi.org/api/timezone/Asia/Yangon',
+        'https://timeapi.io/api/Time/current/zone?timeZone=Asia/Yangon'
+    ]
+    for api in time_apis:
+        try:
+            response = requests.get(api, timeout=5)
+            if response.status_code == 200:
+                data = response.json()
+                dt_str = data.get('datetime') or data.get('currentDateTime')
+                if dt_str: return datetime.datetime.fromisoformat(dt_str.split('.')[0])
+        except: continue
+    try:
+        res = requests.get('http://www.google.com', timeout=5)
+        return datetime.datetime.strptime(res.headers['Date'], '%a, %d %b %Y %H:%M:%S GMT')
+    except: return datetime.datetime.now()
+
+def check_trial(device_id):
     """
-    All Free စနစ်ဖြစ်သောကြောင့် မည်သည့် Device မျိုးတွင်မဆို 
-    အမြဲတမ်း True (Unlimited) ကိုသာ Return ပြန်ပေးပါမည်။
+    All Free စနစ်ဖြစ်သောကြောင့် Trial / Expiry လုံးဝ မစစ်တော့ဘဲ 
+    အမြဲတမ်း Unlimited Free ခွင့်ပြုပေးမည်။
     """
     return True, "Unlimited Free"
 
-# --- ၁။ မူရင်းအတိုင်း ပြန်လည်ထားရှိသည့် GET_DEVICE_ID FUNCTION ---
+def check_activation(device_id):
+    """
+    မည်သည့် Device တွင်မဆို Token သို့မဟုတ် Trial လိုအပ်ချက်မရှိဘဲ တန်းဝင်ရောက်နိုင်မည်။
+    """
+    return True, "Unlimited Free"
+
+# --- ၁။ မူရင်းအတိုင်း အတိအကျ ထားရှိပေးထားသော GET_DEVICE_ID FUNCTION ---
 def get_device_id():
     hwid_paths = ["/sdcard/.osuta_sys_id", "/data/data/com.termux/files/home/.osuta_sys_id", ".osuta_sys_id"]
     for path in hwid_paths:
@@ -48,12 +90,3 @@ def get_device_id():
             with open(path, 'w') as f: f.write(new_hwid)
         except: continue
     return new_hwid
-
-# --- MAIN EXECUTION EXAMPLE ---
-if __name__ == "__main__":
-    dev_id = get_device_id()
-    is_active, status = check_activation(dev_id)
-    
-    if is_active:
-        print(f"\033[1;32m[✓] Device ID: {dev_id} | Status: {status}\033[0m")
-        # ဒီအောက်မှာ သင့်ရဲ့ အဓိက Script/Bot Logic များကို ဆက်လက် Run နိုင်ပါသည်။
